@@ -23,6 +23,7 @@ Thumbs.db
 .codex/
 .playwright-cli/
 garden-gpt-image-2/
+docs/
 output/
 .agents/
 
