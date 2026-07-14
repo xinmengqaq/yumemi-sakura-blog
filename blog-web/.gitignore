@@ -22,9 +22,12 @@ Thumbs.db
 .idea/
 .codex/
 .playwright-cli/
-garden-gpt-image-2/response/
+garden-gpt-image-2/
 output/
 .agents/
 
 .vite/
 .vitest/
+
+# 公开仓库只保留根 README
+**/*.md

@@ -54,3 +54,6 @@ coverage/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# 公开仓库只保留根 README
+**/*.md
