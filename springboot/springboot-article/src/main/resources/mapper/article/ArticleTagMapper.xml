@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xinmengqaq.springboot.article.mapper.ArticleTagMapper">
+
+    <!-- 批量新增文章标签关联 -->
+    <insert id="batchInsert">
+        insert into article_tag (article_id, tag_id)
+        values
+        <foreach collection="articleTags" item="item" separator=",">
+            (#{item.articleId}, #{item.tagId})
+        </foreach>
+    </insert>
+
+    <!-- 根据文章 ID 删除旧标签关联 -->
+    <delete id="deleteByArticleId">
+        delete from article_tag
+        where article_id = #{articleId}
+    </delete>
+
+    <!-- 根据文章 ID 列表批量删除标签关联 -->
+    <delete id="deleteByArticleIds">
+        delete from article_tag
+        where article_id in
+        <foreach collection="articleIds" item="articleId" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+    </delete>
+
+    <!-- 根据文章 ID 查询文章绑定的标签列表 -->
+    <select id="selectTagsByArticleId" resultType="com.xinmengqaq.springboot.article.vo.TagVO">
+        select
+        t.id,
+        t.name,
+        (select count(*) from article_tag at_count where at_count.tag_id = t.id) as article_count,
+        t.created_at,
+        t.updated_at
+        from article_tag at
+        inner join tag t on t.id = at.tag_id
+        where at.article_id = #{articleId}
+        order by t.id desc
+    </select>
+
+
+</mapper>

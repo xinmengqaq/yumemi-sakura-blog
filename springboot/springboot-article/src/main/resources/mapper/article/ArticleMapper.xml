@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xinmengqaq.springboot.article.mapper.ArticleMapper">
+    <!-- 查询文章详情，根据文章 ID 查询 -->
+    <select id="selectById" resultType="com.xinmengqaq.springboot.article.entity.Article">
+        select id, <include refid="articleColumns"/>
+        from article
+        where id = #{id}
+    </select>
+
+    <!-- 新增文章 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into article (<include refid="articleColumns"/>)
+        values (
+            #{categoryId}, #{title}, #{summary}, #{content}, #{coverUrl},
+            #{status}, #{isTop}, #{isRecommend},
+            #{publishedAt}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+
+    <!-- 文章列定义 -->
+    <sql id="articleColumns">
+        category_id, title, summary, content, cover_url, status,
+        is_top, is_recommend, published_at, created_at, updated_at
+    </sql>
+
+    <!-- 根据 ID 更新文章 -->
+    <update id="updateById">
+        update article
+        <set>
+            category_id = #{categoryId},
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="summary != null">
+                summary = #{summary},
+            </if>
+            <if test="content != null and content != ''">
+                content = #{content},
+            </if>
+            <if test="coverUrl != null">
+                cover_url = #{coverUrl},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+                published_at = case
+                    when #{status} = 'published' and published_at is null then #{updatedAt}
+                    else published_at
+                end,
+            </if>
+            <if test="isTop != null">
+                is_top = #{isTop},
+            </if>
+            <if test="isRecommend != null">
+                is_recommend = #{isRecommend},
+            </if>
+            updated_at = #{updatedAt}
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- 更新文章状态 -->
+    <update id="updateStatus">
+        update article
+        set status = #{status},
+        published_at = case
+        when #{status} = 'published' and published_at is null
+        then #{updatedAt}
+        else published_at
+        end,
+        updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <!-- 更新文章置顶状态 -->
+    <update id="updateTop">
+        update article
+        set is_top = #{isTop},
+        updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <!-- 更新文章推荐状态 -->
+    <update id="updateRecommend">
+        update article
+        set is_recommend = #{isRecommend},
+        updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <!-- 根据 ID 删除文章 -->
+    <delete id="deleteById">
+        delete from article where id = #{id}
+    </delete>
+
+    <!-- 根据 ID 列表批量删除文章 -->
+    <delete id="deleteByIds">
+        delete from article
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <sql id="articleListColumns">
+        a.id,
+        a.category_id,
+        c.name as category_name,
+        a.title,
+        a.summary,
+        a.cover_url,
+        a.status,
+        a.is_top,
+        a.is_recommend,
+        a.view_count,
+        a.comment_count,
+        a.published_at,
+        a.created_at,
+        a.updated_at
+    </sql>
+
+    <!-- 查询文章列表，带分页 -->
+    <select id="selectPage" resultType="com.xinmengqaq.springboot.article.vo.ArticleListVO">
+        select
+        <include refid="articleListColumns"/>
+        from article a
+        left join category c on c.id = a.category_id
+        <where>
+            <!-- 搜索关键词 -->
+            <if test="keyword != null and keyword != ''">
+                and (
+                a.title like concat('%', #{keyword}, '%')
+                or a.summary like concat('%', #{keyword}, '%')
+                )
+            </if>
+
+            <!-- 状态查询 -->
+            <if test="status != null and status != ''">
+                and a.status = #{status}
+            </if>
+
+            <!-- 分类查询 -->
+            <if test="categoryId != null">
+                and a.category_id = #{categoryId}
+            </if>
+
+            <!-- 标签查询 -->
+            <if test="tagId != null">
+                and exists (
+                select 1
+                from article_tag at_filter
+                where at_filter.article_id = a.id
+                and at_filter.tag_id = #{tagId}
+                )
+            </if>
+        </where>
+        order by
+        a.is_top desc,
+        a.published_at desc nulls last,
+        a.created_at desc,
+        a.id desc
+    </select>
+
+    <!-- 查询文章详情，带分类名称 -->
+    <select id="selectDetailById" resultType="com.xinmengqaq.springboot.article.vo.ArticleDetailVO">
+        select
+        <include refid="articleListColumns"/>,
+        a.content
+        from article a
+        left join category c on c.id = a.category_id
+        where a.id = #{id}
+    </select>
+
+
+
+</mapper>

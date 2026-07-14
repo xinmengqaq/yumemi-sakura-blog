@@ -1,0 +1,7 @@
+import type { AdminVO, LoginParams } from '@/types/auth'
+import { request } from '@/utils/request'
+
+export const login = (params: LoginParams) =>
+  request.post<AdminVO>('/admin/login', params)
+
+export const logout = () => request.post<void>('/admin/logout')

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xinmengqaq.springboot.admin.mapper.AdminMapper">
+
+    <!-- 根据用户名查询管理员，登录时使用 -->
+    <select id="selectByUsername" resultType="com.xinmengqaq.springboot.admin.entity.Admin">
+        select id, username, password, name, role, avatar, password_version
+        from admin
+        where username = #{username}
+        limit 1
+    </select>
+
+    <!-- 根据管理员 ID 查询管理员，JWT 校验和管理员资料维护时使用 -->
+    <select id="selectById" resultType="com.xinmengqaq.springboot.admin.entity.Admin">
+        select id, username, password, name, role, avatar, password_version
+        from admin
+        where id = #{id}
+        limit 1
+    </select>
+
+    <!-- 修改密码时锁定管理员记录，避免并发请求同时通过旧密码校验 -->
+    <select id="selectByIdForUpdate" resultType="com.xinmengqaq.springboot.admin.entity.Admin">
+        select id, username, password, name, role, avatar, password_version
+        from admin
+        where id = #{id}
+        limit 1
+        for update
+    </select>
+
+    <!-- 修改管理员资料 -->
+    <update id="updateProfile">
+        update admin
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- 修改管理员密码 -->
+    <update id="changePassword">
+        update admin
+        set password = #{newPassword},
+        password_version = password_version + 1
+        where id = #{id}
+    </update>
+</mapper>
+

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.xinmengqaq.springboot.article.mapper.CategoryMapper">
+
+    <!-- 查询所有分类 -->
+    <select id="selectListVO" resultType="com.xinmengqaq.springboot.article.vo.CategoryVO">
+        select
+        <include refid="categoryVOColumns"/>
+        left join article a on a.category_id = c.id
+        <where>
+            <if test="status != null and status != ''">
+                and c.status = #{status}
+            </if>
+        </where>
+        group by <include refid="categoryVOGroupColumns"/>
+        order by c.sort_order asc, c.id desc
+    </select>
+
+
+    <!-- 分类 VO 查询字段，顺序按 CategoryVO 返回字段写 -->
+    <sql id="categoryVOColumns">
+        c.id,
+        c.name,
+        c.description,
+        c.sort_order,
+        c.status,
+        count(a.id) as article_count,
+        c.created_at,
+        c.updated_at
+        from category c
+    </sql>
+
+    <!-- 分类 VO 分组字段，不包含 count(a.id) -->
+    <sql id="categoryVOGroupColumns">
+        c.id,
+        c.name,
+        c.description,
+        c.sort_order,
+        c.status,
+        c.created_at,
+        c.updated_at
+    </sql>
+
+    <!-- 分类查询语句，按category 返回 -->
+    <sql id="selectCategory">
+        select
+        id,
+        name,
+        description,
+        sort_order,
+        status,
+        created_at,
+        updated_at
+        from category
+    </sql>
+
+    <!--按名称查询分类-->
+    <select id="selectByName" resultType="com.xinmengqaq.springboot.article.entity.Category">
+        <include refid="selectCategory" />
+        where name = #{name}
+    </select>
+
+    <!--按ID查询分类-->
+    <select id="selectById" resultType="com.xinmengqaq.springboot.article.entity.Category">
+        <include refid="selectCategory" />
+        where id = #{id}
+    </select>
+
+    <!-- 删除前锁定分类记录，避免占用校验期间产生新的关联写入 -->
+    <select id="selectByIdForUpdate" resultType="com.xinmengqaq.springboot.article.entity.Category">
+        <include refid="selectCategory" />
+        where id = #{id}
+        for update
+    </select>
+
+    <!--按ID和名称查询分类-->
+    <select id="selectExistsByIdAndName" resultType="com.xinmengqaq.springboot.article.entity.Category">
+        <include refid="selectCategory" />
+        where name = #{name}
+        and id != #{id}
+    </select>
+
+    <!--按ID查询分类VO-->
+    <select id="selectByIdVO" resultType="com.xinmengqaq.springboot.article.vo.CategoryVO">
+        select
+        <include refid="categoryVOColumns"/>
+        left join article a on a.category_id = c.id
+        where c.id = #{id}
+        group by <include refid="categoryVOGroupColumns"/>
+    </select>
+
+    <!-- 根据分类ID查询分类下的文章数量 -->
+    <select id="countArticleByCategoryId" resultType="java.lang.Long">
+        select count(1)
+        from article
+        where category_id = #{id}
+    </select>
+
+    <!-- 根据分类ID删除分类 -->
+    <delete id="deleteById">
+        delete from category
+        where id = #{id}
+    </delete>
+
+    <!-- 新增分类 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id" >
+        insert into category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            name,
+            <if test="description != null">
+                description,
+            </if>
+            <if test="sortOrder != null">
+                sort_order,
+            </if>
+            <if test="status != null and status != ''">
+                status,
+            </if>
+            created_at,
+            updated_at,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{name},
+            <if test="description != null">
+                #{description},
+            </if>
+            <if test="sortOrder != null">
+                #{sortOrder},
+            </if>
+            <if test="status != null and status != ''">
+                #{status},
+            </if>
+            #{createdAt},
+            #{updatedAt},
+        </trim>
+    </insert>
+
+    <!-- 修改分类 -->
+    <update id="updateById">
+        update category
+        set
+        name = #{name},
+        description = #{description},
+        sort_order = #{sortOrder},
+        status = #{status},
+        updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+</mapper>
